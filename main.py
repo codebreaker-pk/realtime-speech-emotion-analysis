@@ -23,7 +23,7 @@ st.set_page_config(
 )
 
 # Title and description
-st.title("Speech Emotion Recognition (SER) Application")
+st.title("Speech Emotion Recognition Application")
 st.markdown("""
 This application analyzes speech audio to identify and present the emotion expressed within it.
 The model is an 88.84% accuracy LSTM-based deep learning network that classifies 
