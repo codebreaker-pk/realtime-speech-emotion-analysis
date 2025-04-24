@@ -35,6 +35,7 @@ with st.sidebar:
     st.header("About")
     st.info("""
     Developed by: Pritam Raj , Zakiya Khan, Moshahid Raza , Vedant, Prashant
+    
     The model classifies speech into 8 emotions:
     - Neutral
     - Calm
