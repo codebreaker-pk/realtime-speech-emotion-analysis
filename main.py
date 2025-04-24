@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
 import time
-from tempfile import NamedTemporaryFile
+import tempfile
+from streamlit_mic_recorder import mic_recorder
 import pandas as pd
+
 # Set page configuration
 st.set_page_config(
     page_title="Speech Emotion Recognition",
@@ -22,8 +24,25 @@ The model is an 87.23% accuracy LSTM-based deep learning network that classifies
 emotions in speech from audio features.
 """)
 
-# Create tabs for different input methods
-tab1, tab2 = st.tabs(["Microphone Input", "File Upload"])
+# Sidebar with information
+with st.sidebar:
+    st.header("About")
+    st.info("""
+    Developed by Meidan Greenberg & Linoy Hadad.
+    Original project supervised by Dr. Dima Alberg.
+    Industrial Engineering and Management dept.
+    SCE College, Israel.
+    
+    The model classifies speech into 8 emotions:
+    - Neutral
+    - Calm
+    - Happy
+    - Sad
+    - Angry
+    - Fearful
+    - Disgust
+    - Surprised
+    """)
 
 # Load the model
 @st.cache_resource
@@ -81,7 +100,7 @@ emo_list = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 's
 emotions = {i: emo for i, emo in enumerate(emo_list)}
 
 # Function to process audio and display results
-def process_audio(audio_data):
+def process_audio(audio_path):
     with st.spinner("Processing audio..."):
         start_time = time.perf_counter()
         
@@ -93,7 +112,7 @@ def process_audio(audio_data):
             return
         
         # Preprocess the audio
-        X = preprocess(audio_data)
+        X = preprocess(audio_path)
         
         if X is not None:
             # Make predictions
@@ -147,21 +166,29 @@ def process_audio(audio_data):
         else:
             st.error("Failed to process the audio file.")
 
+# Create tabs for different input methods
+tab1, tab2 = st.tabs(["Microphone Input", "File Upload"])
+
 # Tab 1: Microphone Input
 with tab1:
     st.header("Record Audio from Microphone")
     
-    # Use Streamlit's audio_input widget
-    audio_bytes = st.audio_input("Record your voice", key="microphone")
+    # Use the mic_recorder component
+    audio_data = mic_recorder(
+        start_prompt="Start Recording",
+        stop_prompt="Stop Recording",
+        just_once=True,
+        key="recorder"
+    )
     
-    if audio_bytes:
+    if audio_data:
         # Save the recorded audio to a temporary file
-        with NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
             temp_path = temp_file.name
-            temp_file.write(audio_bytes)
+            temp_file.write(audio_data['bytes'])
         
         # Display the recorded audio
-        st.audio(audio_bytes, format="audio/wav")
+        st.audio(audio_data['bytes'], format="audio/wav")
         
         # Process the audio
         process_audio(temp_path)
@@ -181,7 +208,7 @@ with tab2:
         st.audio(uploaded_file, format='audio/wav')
         
         # Save uploaded file to a temporary file
-        with NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
             temp_path = temp_file.name
             temp_file.write(uploaded_file.getvalue())
         
@@ -190,4 +217,3 @@ with tab2:
         
         # Clean up the temporary file
         os.unlink(temp_path)
-
