@@ -34,11 +34,6 @@ emotions in speech from audio features.
 with st.sidebar:
     st.header("About")
     st.info("""
-    Developed by Meidan Greenberg & Linoy Hadad.
-    Original project supervised by Dr. Dima Alberg.
-    Industrial Engineering and Management dept.
-    SCE College, Israel.
-    
     The model classifies speech into 8 emotions:
     - Neutral
     - Calm
