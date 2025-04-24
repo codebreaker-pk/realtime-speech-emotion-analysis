@@ -26,7 +26,7 @@ st.set_page_config(
 st.title("Speech Emotion Recognition (SER) Application")
 st.markdown("""
 This application analyzes speech audio to identify and present the emotion expressed within it.
-The model is an 87.23% accuracy LSTM-based deep learning network that classifies 
+The model is an 88.84% accuracy LSTM-based deep learning network that classifies 
 emotions in speech from audio features.
 """)
 
@@ -34,6 +34,7 @@ emotions in speech from audio features.
 with st.sidebar:
     st.header("About")
     st.info("""
+    Developed by: Pritam Raj , Zakiya Khan, Moshahid Raza , Vedant, Prashant
     The model classifies speech into 8 emotions:
     - Neutral
     - Calm
