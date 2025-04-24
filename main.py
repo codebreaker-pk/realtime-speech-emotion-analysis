@@ -5,9 +5,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import os
 import time
-import tempfile
-from streamlit_mic_recorder import mic_recorder
-import pandas as pd
+from tempfile import NamedTemporaryFile
 
 # Set page configuration
 st.set_page_config(
@@ -48,6 +46,8 @@ with st.sidebar:
 @st.cache_resource
 def load_emotion_model():
     try:
+        # You'll need to provide the path to your model files
+        # For demo purposes, we'll assume they're in the current directory
         saved_model_path = 'model8723.json'
         saved_weights_path = 'model8723.weights.h5'
         
@@ -99,8 +99,23 @@ def preprocess(file_path):
 emo_list = ['neutral', 'calm', 'happy', 'sad', 'angry', 'fearful', 'disgust', 'surprised']
 emotions = {i: emo for i, emo in enumerate(emo_list)}
 
-# Function to process audio and display results
-def process_audio(audio_path):
+# Main app functionality
+st.header("Speech Emotion Analysis")
+
+# File upload option
+uploaded_file = st.file_uploader("Choose a WAV file", type=['wav'])
+
+# Process the audio file if uploaded
+if uploaded_file is not None:
+    # Display audio player
+    st.audio(uploaded_file, format='audio/wav')
+    
+    # Save uploaded file to a temporary file
+    with NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+        temp_path = temp_file.name
+        temp_file.write(uploaded_file.getvalue())
+    
+    # Process the audio file
     with st.spinner("Processing audio..."):
         start_time = time.perf_counter()
         
@@ -109,111 +124,67 @@ def process_audio(audio_path):
         
         if model is None:
             st.error("Failed to load the model. Please check model files.")
-            return
-        
-        # Preprocess the audio
-        X = preprocess(audio_path)
-        
-        if X is not None:
-            # Make predictions
-            predictions = model.predict(X)
-            pred_np = np.squeeze(predictions, axis=0)
-            
-            # Get the predicted emotion
-            max_emo_idx = np.argmax(pred_np)
-            predicted_emotion = emotions[max_emo_idx]
-            
-            # Calculate processing time
-            processing_time = time.perf_counter() - start_time
-            
-            # Display results
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.success(f"Predicted Emotion: **{predicted_emotion.upper()}**")
-                st.info(f"Processed in {processing_time:.2f} seconds")
-                
-                # Display confidence
-                confidence = pred_np[max_emo_idx] * 100
-                st.metric("Confidence", f"{confidence:.2f}%")
-            
-            with col2:
-                # Create a bar chart of emotion probabilities
-                fig, ax = plt.subplots(figsize=(10, 5))
-                bars = ax.bar(emo_list, pred_np, color='darkturquoise')
-                
-                # Highlight the predicted emotion
-                bars[max_emo_idx].set_color('red')
-                
-                ax.set_ylabel("Probability")
-                ax.set_title("Emotion Prediction")
-                ax.set_ylim(0, 1)
-                
-                # Rotate x-axis labels for better readability
-                plt.xticks(rotation=45)
-                
-                # Use Streamlit's pyplot function
-                st.pyplot(fig)
-            
-            # Display a table with probabilities
-            st.subheader("Emotion Probabilities")
-            prob_df = pd.DataFrame({
-                'Emotion': emo_list,
-                'Probability': pred_np,
-                'Percentage': [f"{p*100:.2f}%" for p in pred_np]
-            })
-            st.table(prob_df)
         else:
-            st.error("Failed to process the audio file.")
+            # Preprocess the audio
+            X = preprocess(temp_path)
+            
+            if X is not None:
+                # Make predictions
+                predictions = model.predict(X)
+                pred_np = np.squeeze(predictions, axis=0)
+                
+                # Get the predicted emotion
+                max_emo_idx = np.argmax(pred_np)
+                predicted_emotion = emotions[max_emo_idx]
+                
+                # Calculate processing time
+                processing_time = time.perf_counter() - start_time
+                
+                # Display results
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.success(f"Predicted Emotion: **{predicted_emotion.upper()}**")
+                    st.info(f"Processed in {processing_time:.2f} seconds")
+                    
+                    # Display confidence
+                    confidence = pred_np[max_emo_idx] * 100
+                    st.metric("Confidence", f"{confidence:.2f}%")
+                
+                with col2:
+                    # Create a bar chart of emotion probabilities
+                    fig, ax = plt.subplots(figsize=(10, 5))
+                    bars = ax.bar(emo_list, pred_np, color='darkturquoise')
+                    
+                    # Highlight the predicted emotion
+                    bars[max_emo_idx].set_color('red')
+                    
+                    ax.set_ylabel("Probability")
+                    ax.set_title("Emotion Prediction")
+                    ax.set_ylim(0, 1)
+                    
+                    # Rotate x-axis labels for better readability
+                    plt.xticks(rotation=45)
+                    
+                    # Use Streamlit's pyplot function
+                    st.pyplot(fig)
+                
+                # Display a table with probabilities
+                st.subheader("Emotion Probabilities")a
+                prob_df = pd.DataFrame({
+                    'Emotion': emo_list,
+                    'Probability': pred_np,
+                    'Percentage': [f"{p*100:.2f}%" for p in pred_np]
+                })
+                st.table(prob_df)
+            else:
+                st.error("Failed to process the audio file.")
+    
+    # Clean up the temporary file
+    os.unlink(temp_path)
 
-# Create tabs for different input methods
-tab1, tab2 = st.tabs(["Microphone Input", "File Upload"])
+# Add missing import
+if 'pd' not in locals():
+    import pandas as pd
 
-# Tab 1: Microphone Input
-with tab1:
-    st.header("Record Audio from Microphone")
-    
-    # Use the mic_recorder component
-    audio_data = mic_recorder(
-        start_prompt="Start Recording",
-        stop_prompt="Stop Recording",
-        just_once=True,
-        key="recorder"
-    )
-    
-    if audio_data:
-        # Save the recorded audio to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-            temp_path = temp_file.name
-            temp_file.write(audio_data['bytes'])
-        
-        # Display the recorded audio
-        st.audio(audio_data['bytes'], format="audio/wav")
-        
-        # Process the audio
-        process_audio(temp_path)
-        
-        # Clean up the temporary file
-        os.unlink(temp_path)
-
-# Tab 2: File Upload
-with tab2:
-    st.header("Upload Audio File")
-    
-    # File upload option
-    uploaded_file = st.file_uploader("Choose a WAV file", type=['wav'])
-    
-    if uploaded_file is not None:
-        # Display audio player
-        st.audio(uploaded_file, format='audio/wav')
-        
-        # Save uploaded file to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-            temp_path = temp_file.name
-            temp_file.write(uploaded_file.getvalue())
-        
-        # Process the audio
-        process_audio(temp_path)
-        
-        # Clean up the temporary file
-        os.unlink(temp_path)
+# Add instructions for running the app
