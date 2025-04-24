@@ -34,7 +34,7 @@ emotions in speech from audio features.
 with st.sidebar:
     st.header("About")
     st.info("""
-    Developed by: Pritam Raj , Zakiya Khan, Moshahid Raza , Vedant, Prashant
+    Developed by: Pritam Raj , Zakiya Khan, Mohd Mosahid Raza Khan , Vedant Kumar, Prashant Kumar
     
     The model classifies speech into 8 emotions:
     - Neutral
