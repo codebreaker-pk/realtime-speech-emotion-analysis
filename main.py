@@ -198,7 +198,6 @@ def process_audio(audio_path):
 # Tab 1: Microphone Input
 
 # Tab 2: File Upload
-with tab2:
 st.header("Upload Audio File")
     
     # File upload option
