@@ -194,54 +194,28 @@ def process_audio(audio_path):
             st.error("Failed to process the audio file.")
 
 # Create tabs for different input methods
-tab1, tab2 = st.tabs(["Microphone Input", "File Upload"])
 
 # Tab 1: Microphone Input
-with tab1:
-    st.header("Record Audio from Microphone")
-    
-    # Use the mic_recorder component
-    audio_data = mic_recorder(
-        start_prompt="Start Recording",
-        stop_prompt="Stop Recording",
-        just_once=True,
-        key="recorder"
-    )
-    
-    if audio_data:
-        # Save the recorded audio to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-            temp_path = temp_file.name
-            temp_file.write(audio_data['bytes'])
-        
-        # Display the recorded audio
-        st.audio(audio_data['bytes'], format="audio/wav")
-        
-        # Process the audio
-        process_audio(temp_path)
-        
-        # Clean up the temporary file
-        os.unlink(temp_path)
 
 # Tab 2: File Upload
 with tab2:
-    st.header("Upload Audio File")
+st.header("Upload Audio File")
     
     # File upload option
-    uploaded_file = st.file_uploader("Choose a WAV file", type=['wav'])
+uploaded_file = st.file_uploader("Choose a WAV file", type=['wav'])
     
-    if uploaded_file is not None:
+if uploaded_file is not None:
         # Display audio player
-        st.audio(uploaded_file, format='audio/wav')
+    st.audio(uploaded_file, format='audio/wav')
         
         # Save uploaded file to a temporary file
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
-            temp_path = temp_file.name
-            temp_file.write(uploaded_file.getvalue())
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+        temp_path = temp_file.name
+        temp_file.write(uploaded_file.getvalue())
         
         # Process the audio
-        process_audio(temp_path)
+    process_audio(temp_path)
         
         # Clean up the temporary file
-        os.unlink(temp_path)
+    os.unlink(temp_path)
 
